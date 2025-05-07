@@ -1,7 +1,4 @@
-# Docs for the Azure Web Apps Deploy action: https://github.com/Azure/webapps-deploy
-# More GitHub Actions for Azure:            https://github.com/Azure/actions
-
-name: Build and deploy Taarafou .NET + React app to Azure Web App
+name: Build and deploy React app to Azure Web App - Taarafou
 
 on:
   push:
@@ -15,38 +12,24 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v3
 
-      - name: Setup .NET 7 SDK
-        uses: actions/setup-dotnet@v2
-        with:
-          dotnet-version: '7.0.x'
-
-      - name: Restore & publish backend
-        working-directory: backend/Taarafou.Posts
-        run: |
-          dotnet restore
-          dotnet publish -c Release -o publish
-
-      - name: Setup Node.js 18
+      - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
           node-version: '18.x'
 
-      - name: Install & build frontend
+      - name: Install frontend dependencies
         working-directory: frontend
-        run: |
-          npm ci
-          npm run build
+        run: npm ci
 
-      - name: Deploy both backend & frontend to Azure
+      - name: Build frontend
+        working-directory: frontend
+        run: npm run build
+
+      - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v2
         with:
-          app-name: Taarafou
-          # this secret must contain the XML publish-profile you 
-          # downloaded from Azure’s “Get Publish Profile”
+          app-name: 'Taarafou'                      # اسم الـ App Service على Azure
           publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
-          # you can list multiple packages (backend publish folder + frontend build)
-          package: |
-            backend/Taarafou.Posts/publish
-            frontend/build
+          package: './frontend/build'               # مسار مجلد البناء (production build)
