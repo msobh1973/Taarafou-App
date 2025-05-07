@@ -1,0 +1,44 @@
+CREATE TABLE Users (
+  UserId INT PRIMARY KEY IDENTITY(1,1),
+  Username NVARCHAR(50) NOT NULL,
+  Email NVARCHAR(100) NOT NULL,
+  PasswordHash NVARCHAR(100) NOT NULL,
+  CreatedAt DATETIME NOT NULL
+);
+
+CREATE TABLE UserProfiles (
+  UserId INT PRIMARY KEY,
+  FullName NVARCHAR(100),
+  Bio NVARCHAR(500),
+  Location NVARCHAR(100),
+  Website NVARCHAR(100),
+  CONSTRAINT FK_UserProfiles_Users FOREIGN KEY (UserId) REFERENCES Users(UserId)
+);
+
+CREATE TABLE Posts (
+  PostId INT PRIMARY KEY IDENTITY(1,1), 
+  UserId INT NOT NULL,
+  Content NVARCHAR(MAX),
+  MediaType NVARCHAR(50),
+  MediaUrl NVARCHAR(500),
+  CreatedAt DATETIME NOT NULL,
+  CONSTRAINT FK_Posts_Users FOREIGN KEY (UserId) REFERENCES Users(UserId)
+);
+
+CREATE TABLE Interactions (
+  InteractionId INT PRIMARY KEY IDENTITY(1,1),
+  UserId INT NOT NULL, 
+  PostId INT NOT NULL,
+  Type NVARCHAR(50) NOT NULL,
+  CreatedAt DATETIME NOT NULL,
+  CONSTRAINT FK_Interactions_Users FOREIGN KEY (UserId) REFERENCES Users(UserId),
+  CONSTRAINT FK_Interactions_Posts FOREIGN KEY (PostId) REFERENCES Posts(PostId)  
+);
+
+CREATE TABLE Translations (
+  TranslationId INT PRIMARY KEY IDENTITY(1,1),
+  PostId INT NOT NULL,
+  LanguageCode NVARCHAR(10) NOT NULL,
+  TranslatedText NVARCHAR(MAX) NOT NULL,
+  CONSTRAINT FK_Translations_Posts FOREIGN KEY (PostId) REFERENCES Posts(PostId)
+);
