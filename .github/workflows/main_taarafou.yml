@@ -10,7 +10,7 @@ name: Build and deploy Node.js app to Azure Web App - Taarafou
 >>>>>>> 64c07020cfe35da0cc6f5e9471f2ae56bd24e1de
 
 on:
-  push:
+  push: 
     branches:
       - main
   workflow_dispatch:
