@@ -1,55 +1,46 @@
-# Docs for the Azure Web Apps Deploy action: https://github.com/Azure/webapps-deploy
-# More GitHub Actions for Azure:      https://github.com/Azure/actions
-
 name: Build and deploy .NET + React apps to Azure Web App - Taarafou
 
 on:
   push:
-    branches: [ main ]
+    branches:
+      - main
   workflow_dispatch:
 
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
     steps:
-      # 1) Check out the code
-      - name: Checkout repository
+      - name: Checkout code
         uses: actions/checkout@v4
 
-      # 2) Set up .NET SDK
-      - name: Setup .NET SDK
+      - name: Setup .NET 7 SDK
         uses: actions/setup-dotnet@v3
         with:
-          dotnet-version: '7.0.x'
+          dotnet-version: "7.0.x"
 
-      # 3) Restore, build & publish the backend
-      - name: Restore & publish Backend
-        run: |
-          cd backend/Taarafou.Posts
-          dotnet restore
-          dotnet publish -c Release -o publish
+      - name: Build backend (Taarafou.Posts)
+        working-directory: ./backend/Taarafou.Posts
+        run: dotnet build --configuration Release
 
-      # 4) Set up Node.js
-      - name: Setup Node.js
+      - name: Setup Node.js 18
         uses: actions/setup-node@v3
         with:
-          node-version: '18.x'
+          node-version: "18.x"
 
-      # 5) Install & build the React frontend
-      - name: Install & build Frontend
+      - name: Install frontend deps
+        working-directory: ./frontend
         run: |
-          cd frontend
           npm ci
-          npm run build
-          # Copy the built static files into the backend wwwroot
-          rm -rf ../backend/Taarafou.Posts/publish/wwwroot
-          mkdir -p ../backend/Taarafou.Posts/publish/wwwroot
-          cp -r build/* ../backend/Taarafou.Posts/publish/wwwroot
 
-      # 6) Deploy the combined output to Azure Web App
+      - name: Build frontend
+        working-directory: ./frontend
+        run: |
+          npm run build
+
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v2
         with:
-          app-name: 'Taarafou'                       # تأكد أنّه يطابق اسم الـWeb App في البوابة
+          app-name: "Taarafou"                     # ضع هنا اسم تطبيقك في Azure
+          slot-name: "production"
           publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
-          package: backend/Taarafou.Posts/publish
+          package: "./frontend/build"
