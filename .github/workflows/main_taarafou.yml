@@ -1,4 +1,4 @@
-name: Build and deploy .NET + React apps to Azure Web App - Taarafou
+name: Build and deploy .NET + React apps to Azure Web App – Taarafou
 
 on:
   workflow_dispatch:
@@ -8,38 +8,46 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v3
+      # 1. نجيب الكود من الريبو
+      - uses: actions/checkout@v3
 
-    - name: Setup .NET SDK
-      uses: actions/setup-dotnet@v3
-      with:
-        dotnet-version: '8.0.x'
+      # 2. نثبت .NET 8
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: '8.0.x'
 
-   - name: Publish .NET solution
-  run: |
-    dotnet publish ./Taarafou-App.sln \
-      --configuration Release \
-      --output ./publish
+      # 3. نبني كل الحلّ (الـ .sln) ونخرّج المخرجات في مجلد publish
+      - name: Publish .NET solution
+        run: |
+          dotnet publish Taarafou-App.sln \
+            --configuration Release \
+            --output ./publish
 
-    - name: Setup Node.js
-      uses: actions/setup-node@v3
-      with:
-        node-version: '20'
+      # 4. نثبت Node.js 20
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20'
 
-    - name: Install & build React client
-      working-directory: ./Taarafou.Client
-      run: |
-        npm ci
-        npm run build
+      # 5. نبني واجهة React (المجلد frontend)
+      - name: Install & build React client
+        working-directory: frontend
+        run: |
+          npm ci
+          npm run build
 
-    - name: Merge client build into wwwroot
-      run: |
-        rm -rf ./publish/wwwroot
-        mv ./Taarafou.Client/build ./publish/wwwroot
+      # 6. ننقل ملفات الواجهة إلى wwwroot داخل publish
+      - name: Copy client build into wwwroot
+        run: |
+          rm -rf publish/wwwroot
+          mkdir -p publish/wwwroot
+          cp -a frontend/build/. publish/wwwroot/
 
-    - name: Deploy to Azure Web App
-      uses: azure/webapps-deploy@v2
-      with:
-        app-name: 'Taarafou'
-        publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
-        package: './publish'
+      # 7. ننشر على Azure App Service
+      - name: Deploy to Azure Web App
+        uses: azure/webapps-deploy@v2
+        with:
+          app-name: 'taarafou'
+          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+          package: ./publish
