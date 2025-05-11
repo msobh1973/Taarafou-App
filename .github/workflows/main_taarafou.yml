@@ -1,4 +1,4 @@
-name: Build and deploy .NET + React apps to Azure Web App – Taarafou
+name: Build and deploy .NET + React apps to Azure Web App - Taarafou
 
 on:
   workflow_dispatch:
@@ -6,55 +6,50 @@ on:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
+
     steps:
-      # 1. استنساخ المستودع
-      - uses: actions/checkout@v3
+    - name: Checkout repository
+      uses: actions/checkout@v3
 
-      # 2. تجهيز .NET SDK
-      - name: Setup .NET SDK
-        uses: actions/setup-dotnet@v3
-        with:
-          dotnet-version: '9.0.x'
+    - name: Setup .NET SDK
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: '9.0.x'
 
-      # 3. بناء ونشر حلّ .NET إلى مجلّد publish
-      - name: Build & publish .NET solution
-        run: |
-          dotnet restore Taarafou-App.sln
-          dotnet publish Taarafou-App.sln -c Release -o publish
+    - name: Publish .NET API
+      working-directory: ./backend
+      run: |
+        dotnet publish ./backend.sln \
+          --configuration Release \
+          --output ./publish
 
-      # 4. تجهيز Node.js
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: '20'
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '20'
 
-      # 5. تثبيت وبناء واجهة React
-      - name: Build React frontend
-        working-directory: frontend
-        run: |
-          npm ci
-          npm run build
+    - name: Install & build React client
+      working-directory: ./frontend
+      run: |
+        npm ci
+        npm run build
+      # بعد البناء، سيتم خروجه في ./frontend/build
 
-      # 6. دمج مجلّد build في wwwroot داخل publish
-      - name: Merge frontend into publish
-        run: |
-          mkdir -p publish/wwwroot
-          cp -a frontend/build/. publish/wwwroot/
+    - name: Merge API & client into wwwroot
+      run: |
+        mkdir -p backend/publish/wwwroot
+        cp -R frontend/build/* backend/publish/wwwroot/
 
-      # 7. ضغط مجلّد publish إلى ZIP
-      - name: Zip the publish folder
-        run: |
-          cd publish
-          zip -r ../app.zip . 
-          cd ..
+    - name: Zip publish output
+      working-directory: ./backend/publish
+      run: |
+        zip -r ../../app.zip .
 
-      # 8. رفع ملف ZIP إلى Azure Web App بدون remote build
-      - name: Deploy ZIP to Azure Web App
-        uses: azure/webapps-deploy@v2
-        with:
-          app-name: 'taarafou'
-          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
-          package: 'app.zip'
-          enable-oryx-build: false
-        env:
-          SCM_DO_BUILD_DURING_DEPLOYMENT: false
+    - name: Deploy ZIP to Azure Web App
+      uses: azure/webapps-deploy@v2
+      with:
+        app-name: 'taarafou'                                           # اسم التطبيق في أزور
+        publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}   # السِرّ الموجود لديك
+        package: 'app.zip'                                             # مسار الأرشيف الذي أنشأناه
+        enable-oryx-build: false                                       # **تعطيل** البناء البعيد
+
