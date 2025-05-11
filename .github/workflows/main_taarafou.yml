@@ -1,4 +1,4 @@
-name: Build and deploy .NET + React apps to Azure Web App - Taarafou
+name: Build and deploy .NET + React apps to Azure Web App – Taarafou
 
 on:
   workflow_dispatch:
@@ -6,44 +6,48 @@ on:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
+
     steps:
-      # 1. Checkout your repo
+      # 1. استنساخ المستودع
       - uses: actions/checkout@v3
 
-      # 2. Setup .NET SDK and publish backend
+      # 2. تجهيز بيئة .NET
       - name: Setup .NET SDK
         uses: actions/setup-dotnet@v3
         with:
-          dotnet-version: '8.0.x'
+          dotnet-version: '9.0.x'
 
-      - name: Publish .NET backend
+      # 3. بناء ونشر حلّ .NET إلى مجلّد publish
+      - name: Build & publish .NET solution
         run: |
-          dotnet publish backend/backend.sln \
-            --configuration Release \
-            --output ./publish
+          dotnet restore Taarafou-App.sln
+          dotnet publish Taarafou-App.sln -c Release -o publish
 
-      # 3. Setup Node.js and build React frontend
+      # 4. تجهيز بيئة Node.js
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
           node-version: '20'
 
-      - name: Install & build React client
+      # 5. تثبيت وبناء تطبيق React
+      - name: Build React frontend
         working-directory: frontend
         run: |
           npm ci
           npm run build
 
-      # 4. Merge the React build into the publish folder
-      - name: Merge client build into wwwroot
+      # 6. دمج مجلّد build الخاص بالـ React في wwwroot ضمن publish
+      - name: Merge frontend into publish
         run: |
-          rm -rf ./publish/wwwroot
-          mv ./frontend/build ./publish/wwwroot
+          mkdir -p publish/wwwroot
+          cp -a frontend/build/. publish/wwwroot/
 
-      # 5. Deploy the combined package to Azure Web App
+      # 7. رفع الحزمة الجاهزة إلى Azure Web App بدون Remote Build
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v2
         with:
           app-name: 'taarafou'
           publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
-          package: ./publish
+          package: 'publish'
+        env:
+          SCM_DO_BUILD_DURING_DEPLOYMENT: false
