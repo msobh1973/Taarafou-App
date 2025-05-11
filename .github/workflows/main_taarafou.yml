@@ -15,11 +15,11 @@ jobs:
       with:
         dotnet-version: '8.0.x'
 
-    - name: Publish .NET API
-      run: |
-        dotnet publish ./Taarafou.Api/Taarafou.Api.csproj \
-          --configuration Release \
-          --output ./publish
+   - name: Publish .NET solution
+  run: |
+    dotnet publish ./Taarafou-App.sln \
+      --configuration Release \
+      --output ./publish
 
     - name: Setup Node.js
       uses: actions/setup-node@v3
