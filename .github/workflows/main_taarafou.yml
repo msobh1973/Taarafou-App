@@ -10,7 +10,7 @@ jobs:
       # 1. استنساخ المستودع
       - uses: actions/checkout@v3
 
-      # 2. تجهيز بيئة .NET
+      # 2. تجهيز .NET SDK
       - name: Setup .NET SDK
         uses: actions/setup-dotnet@v3
         with:
@@ -22,31 +22,38 @@ jobs:
           dotnet restore Taarafou-App.sln
           dotnet publish Taarafou-App.sln -c Release -o publish
 
-      # 4. تجهيز بيئة Node.js
+      # 4. تجهيز Node.js
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
           node-version: '20'
 
-      # 5. تثبيت وبناء تطبيق React
+      # 5. تثبيت وبناء واجهة React
       - name: Build React frontend
         working-directory: frontend
         run: |
           npm ci
           npm run build
 
-      # 6. دمج مجلّد build الخاص بالـ React في wwwroot ضمن publish
+      # 6. دمج مجلّد build في wwwroot داخل publish
       - name: Merge frontend into publish
         run: |
           mkdir -p publish/wwwroot
           cp -a frontend/build/. publish/wwwroot/
 
-      # 7. رفع الحزمة الجاهزة إلى Azure Web App بدون Remote Build
-      - name: Deploy to Azure Web App
+      # 7. ضغط مجلّد publish إلى ZIP
+      - name: Zip the publish folder
+        run: |
+          cd publish
+          zip -r ../app.zip . 
+          cd ..
+
+      # 8. رفع ملف ZIP إلى Azure Web App بدون remote build
+      - name: Deploy ZIP to Azure Web App
         uses: azure/webapps-deploy@v2
         with:
           app-name: 'taarafou'
           publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
-          package: 'publish'
+          package: 'app.zip'
         env:
           SCM_DO_BUILD_DURING_DEPLOYMENT: false
