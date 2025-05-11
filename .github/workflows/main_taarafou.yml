@@ -1,46 +1,45 @@
 name: Build and deploy .NET + React apps to Azure Web App - Taarafou
 
 on:
-  push:
-    branches:
-      - main
   workflow_dispatch:
 
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+    - uses: actions/checkout@v3
 
-      - name: Setup .NET 7 SDK
-        uses: actions/setup-dotnet@v3
-        with:
-          dotnet-version: "7.0.x"
+    - name: Setup .NET SDK
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: '8.0.x'
 
-      - name: Build backend (Taarafou.Posts)
-        working-directory: ./backend/Taarafou.Posts
-        run: dotnet build --configuration Release
+    - name: Publish .NET API
+      run: |
+        dotnet publish ./Taarafou.Api/Taarafou.Api.csproj \
+          --configuration Release \
+          --output ./publish
 
-      - name: Setup Node.js 18
-        uses: actions/setup-node@v3
-        with:
-          node-version: "18.x"
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '20'
 
-      - name: Install frontend deps
-        working-directory: ./frontend
-        run: |
-          npm ci
+    - name: Install & build React client
+      working-directory: ./Taarafou.Client
+      run: |
+        npm ci
+        npm run build
 
-      - name: Build frontend
-        working-directory: ./frontend
-        run: |
-          npm run build
+    - name: Merge client build into wwwroot
+      run: |
+        rm -rf ./publish/wwwroot
+        mv ./Taarafou.Client/build ./publish/wwwroot
 
-      - name: Deploy to Azure Web App
-        uses: azure/webapps-deploy@v2
-        with:
-          app-name: "Taarafou"                     # ضع هنا اسم تطبيقك في Azure
-          slot-name: "production"
-          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
-          package: "./frontend/build"
+    - name: Deploy to Azure Web App
+      uses: azure/webapps-deploy@v2
+      with:
+        app-name: 'Taarafou'
+        publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+        package: './publish'
