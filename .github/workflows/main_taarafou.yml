@@ -16,40 +16,31 @@ jobs:
       with:
         dotnet-version: '9.0.x'
 
-    - name: Publish .NET API
-      working-directory: ./backend
+    - name: Build .NET solution
       run: |
-        dotnet publish ./backend.sln \
-          --configuration Release \
-          --output ./publish
+        dotnet restore Taarafou-App.sln
+        dotnet publish Taarafou-App.sln -c Release -o publish
 
     - name: Setup Node.js
       uses: actions/setup-node@v3
       with:
-        node-version: '20'
+        node-version: '20.x'
 
-    - name: Install & build React client
+    - name: Install and build React frontend
       working-directory: ./frontend
       run: |
         npm ci
         npm run build
-      # بعد البناء، سيتم خروجه في ./frontend/build
 
-    - name: Merge API & client into wwwroot
+    - name: Merge React build into wwwroot
       run: |
-        mkdir -p backend/publish/wwwroot
-        cp -R frontend/build/* backend/publish/wwwroot/
+        rm -rf publish/wwwroot
+        mkdir -p publish/wwwroot
+        cp -R frontend/build/* publish/wwwroot/
 
-    - name: Zip publish output
-      working-directory: ./backend/publish
-      run: |
-        zip -r ../../app.zip .
-
-    - name: Deploy ZIP to Azure Web App
+    - name: Deploy to Azure Web App
       uses: azure/webapps-deploy@v2
       with:
-        app-name: 'taarafou'                                           # اسم التطبيق في أزور
-        publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}   # السِرّ الموجود لديك
-        package: 'app.zip'                                             # مسار الأرشيف الذي أنشأناه
-        enable-oryx-build: false                                       # **تعطيل** البناء البعيد
-
+        app-name: 'Taarafou'
+        publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+        package: './publish'
