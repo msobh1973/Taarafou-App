@@ -31,9 +31,7 @@ var app = builder.Build();
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<PostsContext>();
-    db.Database.Migrate();
-}
-
+   // db.Database.Migrate();
 // في بيئة التطوير، فعّل Swagger UI
 if (app.Environment.IsDevelopment())
 {
