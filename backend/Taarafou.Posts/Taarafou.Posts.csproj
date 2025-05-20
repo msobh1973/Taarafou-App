@@ -7,21 +7,24 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <!-- استخدام In-Memory للبيانات -->
-    <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="7.0.24" />
-    <!-- Swagger / OpenAPI -->
-    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.4.0" />
-    <!-- أدوات EF Core للهجرات -->
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="7.0.24">
+    <!-- استخدام موفر SQL Server للإنتاج -->
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="7.0.20" />
+    <!-- أدوات EF Core للهجرات والتصميم -->
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="7.0.20">
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
+    <!-- Swagger / OpenAPI -->
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.4.0" />
   </ItemGroup>
 
-  <!-- تضمين إعدادات Production في الإخراج -->
+  <!-- تضمين ملفات التهيئة للنشر -->
   <ItemGroup>
     <None Include="appsettings.Production.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <Content Include="web.config">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
 
 </Project>
