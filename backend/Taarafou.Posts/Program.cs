@@ -1,38 +1,48 @@
-// File: backend/Taarafou.Posts/Program.cs
-
-using Microsoft.AspNetCore.Builder;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-using Taarafou.Posts;              // <-- لضمان العثور على PostsContext
+using Microsoft.OpenApi.Models;       // <-- لاستدعاء OpenApiInfo
+using Taarafou.Posts;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// 1. تسجيل DbContext لاستخدام SQLite
+// قراءة الإعدادات من ملف appsettings.json
+builder.Configuration.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
+
+// تسجيل DbContext مع SQLite
 builder.Services.AddDbContext<PostsContext>(options =>
-    options.UseSqlite("Data Source=posts.db")
-);
+    options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// 2. إضافة إعدادات CORS للسماح للواجهة بالوصول
-builder.Services.AddCors(options =>
-{
-    options.AddPolicy("AllowAll", policy =>
-        policy.AllowAnyOrigin()
-              .AllowAnyMethod()
-              .AllowAnyHeader()
-    );
-});
-
-// 3. تسجيل Controllers
+// تسجيل الـ Controllers
 builder.Services.AddControllers();
+
+// تهيئة Swagger
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen(c =>
+{
+    c.SwaggerDoc("v1", new OpenApiInfo
+    {
+        Title = "Taarafou Posts API",
+        Version = "v1"
+    });
+});
 
 var app = builder.Build();
 
-// 4. تفعيل CORS قبل MapControllers
-app.UseCors("AllowAll");
+// طبق الهجرات آلياً عند الإقلاع
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<PostsContext>();
+    db.Database.Migrate();
+}
 
-app.UseHttpsRedirection();
-app.UseAuthorization();
+// في بيئة التطوير، فعّل Swagger UI
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI(c =>
+    {
+        c.SwaggerEndpoint("/swagger/v1/swagger.json", "Taarafou Posts API v1");
+    });
+}
+
 app.MapControllers();
-
 app.Run();
