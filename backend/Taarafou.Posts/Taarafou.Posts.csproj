@@ -7,14 +7,21 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <!-- مزوّد SQLite لإف إي كور -->
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="7.0.12" />
-    <!-- أدوات التصميم (الهجرات) -->
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="7.0.12">
+    <!-- استخدام In-Memory للبيانات -->
+    <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="7.0.24" />
+    <!-- Swagger / OpenAPI -->
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.4.0" />
+    <!-- أدوات EF Core للهجرات -->
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="7.0.24">
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
-    <!-- Swashbuckle لتمكين Swagger -->
-    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.5.0" />
+  </ItemGroup>
+
+  <!-- تضمين إعدادات Production في الإخراج -->
+  <ItemGroup>
+    <None Include="appsettings.Production.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
 </Project>

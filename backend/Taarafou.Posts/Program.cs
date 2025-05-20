@@ -1,46 +1,39 @@
 using Microsoft.EntityFrameworkCore;
-using Microsoft.OpenApi.Models;       // <-- لاستدعاء OpenApiInfo
-using Taarafou.Posts;
+using Microsoft.Extensions.DependencyInjection;
+using Taarafou.Posts; // عدّل الـ namespace إذا اختلف
 
 var builder = WebApplication.CreateBuilder(args);
 
-// قراءة الإعدادات من ملف appsettings.json
-builder.Configuration.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
-
-// تسجيل DbContext مع SQLite
-builder.Services.AddDbContext<PostsContext>(options =>
-    options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
-
-// تسجيل الـ Controllers
+// إضافة الـ Controllers و Swagger
 builder.Services.AddControllers();
-
-// تهيئة Swagger
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen(c =>
-{
-    c.SwaggerDoc("v1", new OpenApiInfo
-    {
-        Title = "Taarafou Posts API",
-        Version = "v1"
-    });
-});
+builder.Services.AddSwaggerGen();
+
+// *** ربط Azure SQL database ***
+builder.Services.AddDbContext<PostsContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("PostsConnection")));
 
 var app = builder.Build();
 
-// طبق الهجرات آلياً عند الإقلاع
+// تطبيق الهجرات تلقائيًّا عند الإقلاع
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<PostsContext>();
-   // db.Database.Migrate();
-// في بيئة التطوير، فعّل Swagger UI
+    db.Database.Migrate();
+}
+
+// تهيئة Swagger في التطوير (أو الإنتاج إذا أردت)
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
-    app.UseSwaggerUI(c =>
-    {
-        c.SwaggerEndpoint("/swagger/v1/swagger.json", "Taarafou Posts API v1");
-    });
+    app.UseSwaggerUI();
+}
+else
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
 }
 
+app.UseAuthorization();
 app.MapControllers();
 app.Run();
