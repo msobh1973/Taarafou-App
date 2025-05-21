@@ -8,9 +8,12 @@ namespace Taarafou.Posts
     {
         public PostsContext CreateDbContext(string[] args)
         {
-            // خذ سلسلة الاتصال من متغيّر البيئة PostsConnection
-            var connectionString = Environment.GetEnvironmentVariable("PostsConnection")
-                                   ?? throw new InvalidOperationException("PostsConnection not set");
+            // حاول أولاً PostsConnection (إذا أضفته يدوياً)، ثم SQLAZURECONNSTR_PostsConnection
+            var connectionString =
+                Environment.GetEnvironmentVariable("PostsConnection")
+                ?? Environment.GetEnvironmentVariable("SQLAZURECONNSTR_PostsConnection")
+                ?? throw new InvalidOperationException(
+                       "Connection string not set: 'PostsConnection' أو 'SQLAZURECONNSTR_PostsConnection'");
 
             var optionsBuilder = new DbContextOptionsBuilder<PostsContext>();
             optionsBuilder.UseSqlServer(connectionString);
