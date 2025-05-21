@@ -1,20 +1,19 @@
+using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
-using Taarafou.Posts;   // تأكد أن مساحة الاسم هنا تطابق مساحة اسم PostsContext
 
-namespace Taarafou.Posts   // يمكنك إزالة "Controllers" من المسار لو شئت
+namespace Taarafou.Posts
 {
-    /// <summary>
-    /// مصنع تصميمي لإنشاء DbContext لاستخدام EF Core CLI (الهجرات).
-    /// </summary>
     public class PostsContextFactory : IDesignTimeDbContextFactory<PostsContext>
     {
         public PostsContext CreateDbContext(string[] args)
         {
+            // خذ سلسلة الاتصال من متغيّر البيئة PostsConnection
+            var connectionString = Environment.GetEnvironmentVariable("PostsConnection")
+                                   ?? throw new InvalidOperationException("PostsConnection not set");
+
             var optionsBuilder = new DbContextOptionsBuilder<PostsContext>();
-            
-            // استخدم SQLite هنا بدلاً من In-Memory
-            optionsBuilder.UseSqlite("Data Source=posts.db");
+            optionsBuilder.UseSqlServer(connectionString);
 
             return new PostsContext(optionsBuilder.Options);
         }
