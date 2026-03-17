@@ -16,7 +16,6 @@ jobs:
         uses: actions/setup-dotnet@v3
         with:
           dotnet-version: '9.0.x'
-
       - name: Build & publish .NET solution
         run: |
           dotnet restore ./Taarafou-App.sln
@@ -27,7 +26,6 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: '20.x'
-
       - name: Install and build React frontend
         working-directory: frontend
         run: |
@@ -44,34 +42,34 @@ jobs:
       # 5. Add web.config for static hosting and SPA routing
       - name: Add web.config for static hosting
         run: |
-          cat > publish/wwwroot/web.config <<'EOF'
-          <?xml version="1.0" encoding="utf-8"?>
-          <configuration>
-            <system.webServer>
-              <staticContent>
-                <mimeMap fileExtension=".json" mimeType="application/json" />
-              </staticContent>
-              <defaultDocument>
-                <files>
-                  <clear />
-                  <add value="index.html" />
-                </files>
-              </defaultDocument>
-              <rewrite>
-                <rules>
-                  <rule name="SPA Routes" stopProcessing="true">
-                    <match url=".*" />
-                    <conditions logicalGrouping="MatchAll">
-                      <add input="{REQUEST_FILENAME}" matchType="IsFile" negate="true" />
-                      <add input="{REQUEST_FILENAME}" matchType="IsDirectory" negate="true" />
-                    </conditions>
-                    <action type="Rewrite" url="/" />
-                  </rule>
-                </rules>
-              </rewrite>
-            </system.webServer>
-          </configuration>
-          EOF
+          cat > publish/wwwroot/web.config << 'EOF'
+<?xml version="1.0" encoding="utf-8"?>
+<configuration>
+  <system.webServer>
+    <staticContent>
+      <mimeMap fileExtension=".json" mimeType="application/json" />
+    </staticContent>
+    <defaultDocument>
+      <files>
+        <clear />
+        <add value="index.html" />
+      </files>
+    </defaultDocument>
+    <rewrite>
+      <rules>
+        <rule name="SPA Routes" stopProcessing="true">
+          <match url=".*" />
+          <conditions logicalGrouping="MatchAll">
+            <add input="{REQUEST_FILENAME}" matchType="IsFile" negate="true" />
+            <add input="{REQUEST_FILENAME}" matchType="IsDirectory" negate="true" />
+          </conditions>
+          <action type="Rewrite" url="/" />
+        </rule>
+      </rules>
+    </rewrite>
+  </system.webServer>
+</configuration>
+EOF
 
       # 6. Zip the publish folder
       - name: Zip publish folder
